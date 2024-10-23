@@ -79,7 +79,7 @@ func readAny(in io.Reader, majorType MajorType, arg Arg, value uint64) (any, err
 		return string(b.Bytes()), nil
 
 	case MajorTypeArray:
-		a := make([]any, value)
+		a := make([]any, 0, min(value, 16)) // limit pre allocate
 		if arg == ArgIndefinite {
 			for {
 				majorType, arg, value, err := readMajorType(in)
@@ -103,13 +103,13 @@ func readAny(in io.Reader, majorType MajorType, arg Arg, value uint64) (any, err
 				if err != nil {
 					return nil, err
 				}
-				a[i] = v
+				a = append(a, v)
 			}
 		}
 		return a, nil
 
 	case MajorTypeMap:
-		m := make(map[any]any, value)
+		m := make(map[any]any, min(value, 16)) // limit pre allocate
 		if arg == ArgIndefinite {
 			for {
 				majorType, arg, value, err := readMajorType(in)
@@ -151,11 +151,11 @@ func readAny(in io.Reader, majorType MajorType, arg Arg, value uint64) (any, err
 
 	default: // MajorTypeSimpleFloat:
 		switch {
-		case arg == 0 && value < uint64(SimpleFalse):
+		case arg == 0 && Arg(value) < SimpleFalse:
 			return readUnsigned[uint8](majorType, arg, value)
-		case arg == 0 && (value == uint64(SimpleFalse) || value == SimpleTrue):
+		case arg == 0 && (Arg(value) == SimpleFalse || Arg(value) == SimpleTrue):
 			return readBool(majorType, value)
-		case arg == 0 && (value == SimpleNull || value == SimpleUndefined):
+		case arg == 0 && (Arg(value) == SimpleNull || Arg(value) == SimpleUndefined):
 			return nil, nil
 		case arg == SimpleUint8:
 			return readUnsigned[uint8](majorType, arg, value)

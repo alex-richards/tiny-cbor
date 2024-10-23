@@ -35,7 +35,7 @@ func readMajorType(in io.Reader) (MajorType, Arg, uint64, error) {
 // decodePrefix returns the major type, argument, and the length, in bytes, of
 // the remaining part of the header if any.
 func decodePrefix(p byte) (MajorType, Arg) {
-	majorType := MajorType(p & majorTypeMask)
+	majorType := MajorType(p & MajorTypeMask)
 	arg := Arg(p & argMask)
 	return majorType, arg
 }
@@ -219,11 +219,11 @@ func ReadBool(in io.Reader) (bool, error) {
 
 func readBool(majorType MajorType, value uint64) (bool, error) {
 	if majorType == MajorTypeSimpleFloat {
-		if byte(value) == SimpleFalse {
+		if Arg(value) == SimpleFalse {
 			return false, nil
 		}
 
-		if byte(value) == SimpleTrue {
+		if Arg(value) == SimpleTrue {
 			return true, nil
 		}
 
@@ -329,7 +329,7 @@ func readByteChunks(
 func ReadArray(
 	in io.Reader,
 	readLength func(indefinite bool, length uint64) error,
-	readItem func(in io.Reader) error,
+	readItem func(i uint64, in io.Reader) error,
 ) error {
 	majorType, arg, value, err := readMajorType(in)
 	if err != nil {
@@ -345,7 +345,7 @@ func readArray(
 	arg Arg,
 	value uint64,
 	readLength func(indefinite bool, length uint64) error,
-	readItem func(in io.Reader) error,
+	readItem func(i uint64, in io.Reader) error,
 ) error {
 	if majorType != MajorTypeArray {
 		return ErrUnsupportedMajorType
@@ -360,7 +360,7 @@ func readArray(
 
 	if indefinite {
 		pin := &peekReader{r: in}
-		for {
+		for i := uint64(0); ; i++ {
 			r, err := pin.PeekByte()
 			if err != nil {
 				return err
@@ -369,14 +369,14 @@ func readArray(
 				break
 			}
 
-			err = readItem(pin)
+			err = readItem(i, pin)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		for i := uint64(0); i < value; i++ {
-			err = readItem(in)
+			err = readItem(i, in)
 			if err != nil {
 				return err
 			}

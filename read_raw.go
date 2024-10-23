@@ -47,7 +47,10 @@ func ReadRaw(
 				}
 
 				if b == valueBreak {
-					out.Write([]byte{b})
+					_, err = out.Write([]byte{b})
+					if err != nil {
+						return err
+					}
 					break
 				}
 
@@ -74,7 +77,10 @@ func ReadRaw(
 				}
 
 				if b == valueBreak {
-					out.Write([]byte{b})
+					_, err = out.Write([]byte{b})
+					if err != nil {
+						return err
+					}
 					break
 				}
 
@@ -104,7 +110,10 @@ func ReadRaw(
 				}
 
 				if b == valueBreak {
-					out.Write([]byte{b})
+					_, err = out.Write([]byte{b})
+					if err != nil {
+						return err
+					}
 					break
 				}
 

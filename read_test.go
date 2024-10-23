@@ -585,7 +585,7 @@ func Test_ReadBool(t *testing.T) {
 				want = false
 			case encoded[0] == 0xf5:
 				want = true
-			case encoded[0]&majorTypeMask == MajorTypeSimpleFloat:
+			case encoded[0]&MajorTypeMask == byte(MajorTypeSimpleFloat):
 				wantErr = ErrUnsupportedValue
 			default:
 				wantErr = ErrUnsupportedMajorType
@@ -633,7 +633,7 @@ func Test_ReadArray(t *testing.T) {
 					out = make([]int32, 0, length)
 					return nil
 				},
-				func(in io.Reader) error {
+				func(i uint64, in io.Reader) error {
 					v, err := ReadSigned[int32](in)
 					if err != nil {
 						return err

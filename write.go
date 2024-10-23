@@ -48,7 +48,7 @@ func WriteSigned[T int8 | int16 | int32 | int64](out io.Writer, value T) (int, e
 func WriteFloat[T float16.Float16 | float32 | float64](out io.Writer, value T) (int, error) {
 	switch v := any(value).(type) {
 	case float16.Float16:
-		sharedBuffer[0] = MajorTypeSimpleFloat | SimpleFloat16
+		sharedBuffer[0] = byte(MajorTypeSimpleFloat) | byte(SimpleFloat16)
 		shiftBytesFrom(uint16(v), sharedBuffer[1:3])
 		return out.Write(sharedBuffer[0:3])
 
@@ -57,7 +57,7 @@ func WriteFloat[T float16.Float16 | float32 | float64](out io.Writer, value T) (
 			return WriteFloat(out, float16.Fromfloat32(v))
 		}
 
-		sharedBuffer[0] = MajorTypeSimpleFloat | SimpleFloat32
+		sharedBuffer[0] = byte(MajorTypeSimpleFloat) | byte(SimpleFloat32)
 		shiftBytesFrom(math.Float32bits(v), sharedBuffer[1:5])
 		return out.Write(sharedBuffer[0:5])
 
@@ -68,7 +68,7 @@ func WriteFloat[T float16.Float16 | float32 | float64](out io.Writer, value T) (
 			return WriteFloat(out, v32)
 		}
 
-		sharedBuffer[0] = MajorTypeSimpleFloat | SimpleFloat64
+		sharedBuffer[0] = byte(MajorTypeSimpleFloat) | byte(SimpleFloat64)
 		shiftBytesFrom(math.Float64bits(v), sharedBuffer[1:9])
 		return out.Write(sharedBuffer[0:9])
 
@@ -79,9 +79,17 @@ func WriteFloat[T float16.Float16 | float32 | float64](out io.Writer, value T) (
 
 func WriteBool(out io.Writer, value bool) (int, error) {
 	if value {
-		return writeMajorType(out, MajorTypeSimpleFloat, SimpleTrue)
+		return writeMajorType(out, MajorTypeSimpleFloat, uint64(SimpleTrue))
 	}
 	return writeMajorType(out, MajorTypeSimpleFloat, uint64(SimpleFalse))
+}
+
+func WriteNull(out io.Writer) (int, error) {
+	return writeMajorType(out, MajorTypeSimpleFloat, uint64(SimpleNull))
+}
+
+func WriteBreak(out io.Writer) (int, error) {
+	return writeMajorType(out, MajorTypeSimpleFloat, uint64(SimpleBreak))
 }
 
 func WriteTag(out io.Writer, value uint64) (int, error) {

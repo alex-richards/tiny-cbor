@@ -5,7 +5,7 @@ import "io"
 type peekReader struct {
 	r  io.Reader // wrapped reader
 	p  byte      // peeked byte
-	pv bool      // peeded valid
+	pv bool      // peeked valid
 }
 
 func (r *peekReader) Read(out []byte) (int, error) {
